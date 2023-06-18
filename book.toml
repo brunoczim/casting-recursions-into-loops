@@ -1,0 +1,6 @@
+[book]
+authors = ["brunoczim"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Casting Recursions Into Loops"
