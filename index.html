@@ -150,12 +150,12 @@ into loop code.</p>
 <p>Recursive code is a beautiful and simple way of expressing repetition, and to
 some people, for some problems, it is the most natural way of doing so. However,
 in languages like Rust, where stack overflow is a possibility, recursion is
-limited to inputs small enough. One could solve this problem by converting
-recursion code to loop code.</p>
+limited to inputs small enough to prevent stack overflow. One could solve this
+problem by converting recursion code to loop code.</p>
 <h1 id="recursion"><a class="header" href="#recursion">Recursion</a></h1>
 <p>By recursion, we mean a function that calls itself in order to
 implement repetition. In the following code, there is a classical example of
-recursion, factorial function:</p>
+recursion, the factorial function:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn factorial(n: u128) -&gt; u128 {
@@ -166,10 +166,10 @@ recursion, factorial function:</p>
     }
 }
 <span class="boring">}</span></code></pre></pre>
-<p>Mutual recursion is when a group of functions call each other in other to
-implement repetition (and can be thought as a subtype of recursion). In the
-following code, there is a naive but fun implementation of &quot;is even&quot; and
-&quot;is odd&quot; function, and that are mutually recursive:</p>
+<p>Mutual recursion is a subtype of recursion in which a group of functions call
+each other in order to implement repetition. In the following code, there is a
+naive but fun implementation of &quot;is even&quot; and &quot;is odd&quot; functions that is
+mutually recursive:</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>fn is_even(n: u128) -&gt; bool {
@@ -188,6 +188,14 @@ fn is_odd(n: u128) -&gt; bool {
     }
 }
 <span class="boring">}</span></code></pre></pre>
+<h1 id="loops"><a class="header" href="#loops">Loops</a></h1>
+<p>I'll assume most of you are comfortable with loops, but I will do a quick
+recapitulation. Loops work by repeting a block of code until a given condition
+is met. Rust has three types of loops: the one with a <code>loop</code> keyword, the one
+with the <code>while</code> keyword, and the one with the <code>for</code> keyword. The <code>loop</code> loop
+does not have a condition but can be stopped with a <code>break</code> keyword; the <code>while</code>
+loop has a fixed condition; the <code>for</code> loop is a more dynamic loop, controlled by
+an iterator object.</p>
 
                     </main>
 
