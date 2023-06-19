@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="tc-rec-functions.html"><strong aria-hidden="true">2.</strong> Tail Call Recursive Functions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="what-is-tc.html"><strong aria-hidden="true">2.1.</strong> What is a Tail Call?</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="tc-rec-functions.html"><strong aria-hidden="true">2.</strong> Tail Call Recursive Functions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="what-is-tc.html"><strong aria-hidden="true">2.1.</strong> What is a Tail Call?</a></li><li class="chapter-item expanded "><a href="convert-to-tc.html"><strong aria-hidden="true">2.2.</strong> Converting non-Tail Call Recursion to Tail Call Recursion</a></li><li class="chapter-item expanded "><a href="tco.html"><strong aria-hidden="true">2.3.</strong> Tail Call Optimization/Elimination</a></li><li class="chapter-item expanded "><a href="convert-tc-to-loop.html"><strong aria-hidden="true">2.4.</strong> Converting Tail Call Recursions to Loops</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -238,6 +238,109 @@ recursive call in tail position:</p>
 <span class="boring">}</span></code></pre></pre>
 <p>After performing the recursive call, the function needs to add <code>1</code> to the
 result, therefore, it does not immediately return.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="converting-non-tail-call-recursion-to-tail-call-recursion"><a class="header" href="#converting-non-tail-call-recursion-to-tail-call-recursion">Converting non-Tail Call Recursion to Tail Call Recursion</a></h1>
+<p>Non-tail call recursions can sometimes be converted to tail call recursion. One
+case is when the recursion performs a commutative operation, such as addition
+and multiplication. Recall that a commutative operation is an operation whose
+operands can be swapped and the result is not changed.</p>
+<h2 id="recursion-performing-commutative-operations"><a class="header" href="#recursion-performing-commutative-operations">Recursion Performing Commutative Operations</a></h2>
+<p>In this case, we are adding an additional argument storing the intermediate
+result. As a studycase, consider the factorial function written in the following
+way:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn factorial(n: u128) -&gt; u128 {
+    if n &lt;= 1 {
+        1
+    } else {
+        n * factorial(n - 1)
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>It can be rewritten as:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn factorial_impl(n: u128, acc: u128) -&gt; u128 {
+    if n &lt;= 1 {
+        acc
+    } else {
+        factorial_impl(n - 1, n * acc)
+    }
+}
+
+fn factorial(n: u128) -&gt; u128 {
+    factorial_impl(n, 1)
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Note:</p>
+<ol>
+<li>The additional accumulator argument.</li>
+<li>The accumulator is returned in the base-case, and is propagated by recursive
+callees, since the calls are tail calls.</li>
+<li>And so, the actual computation happens in the arguments.</li>
+<li>The multiplication order is reversed, but it does not matter, because
+multiplication is commutative. Multiplication is reversed because what
+happens is <code>((4 * 3) * 2) * 1</code> in the tail call version, while in the
+non-tail call, what happens is <code>4 * (3 * (2 * 1))</code>.</li>
+</ol>
+<p>Another example we could explore is a function that finds the maximum element
+of an array slice. Consider the following non-tail call recursion:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn max(slice: &amp;[u64]) -&gt; u64 {
+    match slice.split_first() {
+        None =&gt; 0,
+        Some((x, xs)) =&gt; u64::max(*x, max(xs)),
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>It is not tail recursive function because after the recursive call, there is a
+call to <code>u64::max</code>. Despite that, it is possible to make it tail recursive,
+look at the following implementation:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn max_impl(slice: &amp;[u64], acc: u64) -&gt; u64 {
+    match slice.split_first() {
+        None =&gt; acc,
+        Some((x, xs)) =&gt; max(xs, u64::max(*x, acc)),
+    }
+}
+
+fn max(slice: &amp;[u64]) -&gt; u64 {
+    max_impl(slice, 0)
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="thinking-of-parameters-as-variables-in-a-loop"><a class="header" href="#thinking-of-parameters-as-variables-in-a-loop">Thinking of Parameters as &quot;Variables&quot; in a Loop</a></h2>
+<p>A more difficult case is this Fibonacci function implementation:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn fibonacci(n: u16) -&gt; u128 {
+    if n &lt;= 1 {
+        1
+    } else {
+        fibonacci(n - 1) + fibonacci(n - 2)
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>The difficulty here is that this function has two recursive calls. However,
+we can fix this by having two accumulators that interact with each other. Look
+at this reimplementation:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn fibonacci_impl(n: u16, curr: u128, next: u128) -&gt; u128 {
+    if n == 0 {
+        curr
+    } else {
+        fibonacci_impl(n - 1, next, curr + next)
+    }
+}
+
+fn fibonacci(n: u16) -&gt; u128 {
+    fibonacci_impl(n, 1, 1)
+}
+<span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tail-call-optimizationelimination"><a class="header" href="#tail-call-optimizationelimination">Tail Call Optimization/Elimination</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="converting-tail-call-recursions-to-loops"><a class="header" href="#converting-tail-call-recursions-to-loops">Converting Tail Call Recursions to Loops</a></h1>
 
                     </main>
 
