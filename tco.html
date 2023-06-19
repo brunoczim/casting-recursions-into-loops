@@ -145,6 +145,53 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="tail-call-optimizationelimination"><a class="header" href="#tail-call-optimizationelimination">Tail Call Optimization/Elimination</a></h1>
+<p>There is a compiler optimization called &quot;Tail Call Optimization&quot; or
+&quot;Tail Call Elimination&quot; (TCO/TCE) which transforms tail call recursive functions
+into loops (without changing the source code!). Some languages guarantee
+TCO/TCE, even allowing potentially infinite recursions as if they were infinite
+loops, but others, like Rust, do not guarantee the optimization and merely have
+it as an... optimization. Let's recall the tail call factorial function:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn factorial_impl(n: u128, acc: u128) -&gt; u128 {
+    if n &lt;= 1 {
+        acc
+    } else {
+        factorial_impl(n - 1, n * acc)
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>In a fictious assembly language, this function could be compiled like this
+without the optimization:</p>
+<pre><code>factorial_impl:
+    mov %temp0, %arg0
+    cmp %temp0, 1
+    jle .base
+    sub %arg0, %temp0, 1
+    mul %arg1, %temp0, %arg1
+    call factorial_impl
+    ret
+.base:
+    mov %ret0, %arg1
+    ret
+</code></pre>
+<p>With the optimization, the sequence <code>call; ret</code> would become a simple <code>jmp</code>:</p>
+<pre><code>factorial_impl:
+    mov %temp0, %arg0
+    cmp %temp0, 1
+    jle .base
+    sub %arg0, %temp0, 1
+    mul %arg1, %temp0, %arg1
+    jmp factorial_impl
+.base:
+    mov %ret0, %arg1
+    ret
+</code></pre>
+<p>This is why transforming a recursive function into a tail call recursive
+function matters! We can avoid stack overflow easily. Even though the
+optimization is not guaranteed in Rust, having a tail call version of your
+function can make it easier to understand how a loop version relate to
+recursion, as you will see in the next subchapter.</p>
 
                     </main>
 
