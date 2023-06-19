@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="tc-rec-functions.html"><strong aria-hidden="true">2.</strong> Tail Call Recursive Functions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="what-is-tc.html"><strong aria-hidden="true">2.1.</strong> What is a Tail Call?</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -197,6 +197,47 @@ with the <code>while</code> keyword, and the one with the <code>for</code> keywo
 does not have a condition but can be stopped with a <code>break</code> keyword; the <code>while</code>
 loop has a fixed condition; the <code>for</code> loop is a more dynamic loop, controlled by
 an iterator object.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tail-call-recursive-functions"><a class="header" href="#tail-call-recursive-functions">Tail Call Recursive Functions</a></h1>
+<p>In this chapter we will see what is a tail function call, a function that is
+tail call recursive, and how to convert them to loops. Finally, we'll see how to
+convert some cases of non-tail call recursive functions into tail call recursive
+ones.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="what-is-a-tail-call"><a class="header" href="#what-is-a-tail-call">What is a Tail Call?</a></h1>
+<p>A tail call is a function call that is the last thing the callee will execute.
+In other words, if a function <code>F</code> calls a function <code>G</code>, such call is a tail call
+if after calling <code>G</code>, <code>F</code> immediately returns; <code>return G()</code> is a tail call, but
+<code>return G() * 3</code> is not a tail call, because after <code>G()</code> finishes, <code>F</code> still
+needs to multiply the result by <code>3</code>.</p>
+<h2 id="example-of-a-tail-call-recursive-function"><a class="header" href="#example-of-a-tail-call-recursive-function">Example of a Tail Call Recursive Function</a></h2>
+<p>The following function is a recursive function that has the recursive call in
+tail position:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn add(m: u64, n: u64) -&gt; u64 {
+    if m == 0 {
+        n
+    } else {
+        add(m - 1, n + 1)
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Note that after performing the recursive call, the result is returned unmodified
+and the function will do nothing but return it immediately.</p>
+<h2 id="counterexample-a-non-tail-call-recursive-function"><a class="header" href="#counterexample-a-non-tail-call-recursive-function">Counterexample: a Non-Tail Call Recursive Function</a></h2>
+<p>The following function is a recursive function that does <strong>not</strong> have the
+recursive call in tail position:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn add(m: u64, n: u64) -&gt; u64 {
+    if m == 0 {
+        n
+    } else {
+        1 + add(m - 1, n)
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>After performing the recursive call, the function needs to add <code>1</code> to the
+result, therefore, it does not immediately return.</p>
 
                     </main>
 
